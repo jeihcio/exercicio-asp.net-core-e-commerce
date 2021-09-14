@@ -47,13 +47,11 @@ namespace CasaDoCodigo
             }
 
             Catalogo catalogo = new Catalogo();
+            Relatorio relatorio = new Relatorio(catalogo);
 
             app.Run(async (context) =>
             {
-                foreach (var livro in catalogo.GetLivros())
-                {
-                    await context.Response.WriteAsync($"{livro.Codigo,-10} {livro.Nome,-40} {livro.Preco.ToString("C"),10}\r\n");
-                }
+                await relatorio.Imprimir(context);
             });
         }
     }
