@@ -46,17 +46,11 @@ namespace CasaDoCodigo
                 app.UseExceptionHandler("/Error");
             }
 
-            var livros = new List<Livro>();
-            livros.Add(new Livro("001", "Quem Mexeu na Minha Query?", 12.99m));
-            livros.Add(new Livro("002", "Fique Rico com C#", 30.99m));
-            livros.Add(new Livro("003", "Java Para Baixinhos", 25.99m));
-
-            app.UseStaticFiles();
-            app.UseCookiePolicy();
+            Catalogo catalogo = new Catalogo();
 
             app.Run(async (context) =>
             {
-                foreach (var livro in livros)
+                foreach (var livro in catalogo.GetLivros())
                 {
                     await context.Response.WriteAsync($"{livro.Codigo,-10} {livro.Nome,-40} {livro.Preco.ToString("C"),10}\r\n");
                 }
