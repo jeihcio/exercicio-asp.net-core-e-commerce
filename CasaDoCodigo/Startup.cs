@@ -54,10 +54,11 @@ namespace CasaDoCodigo
             app.UseStaticFiles();
             app.UseCookiePolicy();
 
-            app.Run(async (context) => {
+            app.Run(async (context) =>
+            {
                 foreach (var livro in livros)
                 {
-                    await context.Response.WriteAsync($"{livro.Codigo} {livro.Nome} {livro.Preco}\r\n");
+                    await context.Response.WriteAsync($"{livro.Codigo,-10} {livro.Nome,-40} {livro.Preco.ToString("C"),10}\r\n");
                 }
             });
         }
