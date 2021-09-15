@@ -30,12 +30,14 @@ namespace CasaDoCodigo
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            services.AddTransient<ICatalogo, Catalogo>();
+            services.AddTransient<IRelatorio, Relatorio>();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IServiceProvider serviceProvider)
         {
             if (env.IsDevelopment())
             {
@@ -46,8 +48,8 @@ namespace CasaDoCodigo
                 app.UseExceptionHandler("/Error");
             }
 
-            Catalogo catalogo = new Catalogo();
-            Relatorio relatorio = new Relatorio(catalogo);
+            ICatalogo catalogo = serviceProvider.GetService<ICatalogo>();
+            IRelatorio relatorio = serviceProvider.GetService<IRelatorio>();
 
             app.Run(async (context) =>
             {
