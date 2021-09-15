@@ -30,8 +30,15 @@ namespace CasaDoCodigo
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
-            services.AddTransient<ICatalogo, Catalogo>();
-            services.AddTransient<IRelatorio, Relatorio>();
+            //services.AddTransient<ICatalogo, Catalogo>();
+            //services.AddTransient<IRelatorio, Relatorio>();
+
+            //services.AddScoped<ICatalogo, Catalogo>();
+            //services.AddScoped<IRelatorio, Relatorio>();
+
+            var catalogo = new Catalogo();
+            services.AddSingleton<ICatalogo>(catalogo);
+            services.AddSingleton<IRelatorio>(new Relatorio(catalogo));
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
