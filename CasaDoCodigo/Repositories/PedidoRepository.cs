@@ -9,7 +9,8 @@ namespace CasaDoCodigo.Repositories
 {
     public interface IPedidoRepository
     {
-
+        Pedido GetPedido();
+        void AddItem(string codigo);
     }
 
     public class PedidoRepository : BaseRepository<Pedido>, IPedidoRepository
@@ -18,6 +19,50 @@ namespace CasaDoCodigo.Repositories
 
         public PedidoRepository(ApplicationContext contexto) : base(contexto)
         {
+        }
+
+        public void AddItem(string codigo)
+        {
+            var produto = contexto.Set<Produto>()
+                .Where(x => x.Codigo == codigo)
+                .SingleOrDefault();
+
+            if (produto == null)
+            {
+                throw new ArgumentException("Produto não encontrado");
+            }
+
+            var pedido = GetPedido();
+            var itemPedido = contexto.Set<ItemPedido>()
+                .Where(x => x.Produto.Codigo == codigo && x.Pedido.Id == pedido.Id)
+                .SingleOrDefault();
+
+            if (pedido == null)
+            {
+                itemPedido = new ItemPedido(pedido, produto, 1, produto.Preco);
+                contexto.Set<ItemPedido>()
+                    .Add(itemPedido);
+
+                contexto.SaveChanges();
+            }
+        }
+
+        public Pedido GetPedido()
+        {
+            var pedidoId = GetPedidoId();
+            var pedido = dbSet
+                .Where(x => x.Id == pedidoId)
+                .SingleOrDefault();
+
+            if (pedido == null)
+            {
+                pedido = new Pedido();
+                dbSet.Add(pedido);
+                contexto.SaveChanges();
+                SetPedidoId(pedido.Id);
+            }
+
+            return pedido;
         }
 
         private int? GetPedidoId()
