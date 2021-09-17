@@ -18,8 +18,9 @@ namespace CasaDoCodigo.Repositories
     {
         private readonly IHttpContextAccessor contextAccessor;
 
-        public PedidoRepository(ApplicationContext contexto) : base(contexto)
+        public PedidoRepository(ApplicationContext contexto, IHttpContextAccessor contextAccessor) : base(contexto)
         {
+            this.contextAccessor = contextAccessor;
         }
 
         public void AddItem(string codigo)
@@ -38,7 +39,7 @@ namespace CasaDoCodigo.Repositories
                 .Where(x => x.Produto.Codigo == codigo && x.Pedido.Id == pedido.Id)
                 .SingleOrDefault();
 
-            if (pedido == null)
+            if (itemPedido == null)
             {
                 itemPedido = new ItemPedido(pedido, produto, 1, produto.Preco);
                 contexto.Set<ItemPedido>()
