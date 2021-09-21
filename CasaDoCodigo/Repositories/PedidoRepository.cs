@@ -89,6 +89,11 @@ namespace CasaDoCodigo.Repositories
         {
             var itemPedidoDB = itemPedidoRepository.GetItemPedido(itemPedido.Id);
 
+            if (itemPedido.Quantidade == 0)
+            {
+                itemPedidoRepository.RemoveItemPedido(itemPedido.Id);
+            }
+
             if (itemPedidoDB != null)
             {
                 itemPedidoDB.AtualizaQuantidade(itemPedido.Quantidade);
