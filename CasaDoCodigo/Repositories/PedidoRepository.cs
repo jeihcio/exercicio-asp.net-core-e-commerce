@@ -65,6 +65,7 @@ namespace CasaDoCodigo.Repositories
             var pedido = dbSet
                 .Include(x => x.Itens)
                 .ThenInclude(x => x.Produto)
+                .Include(x => x.Cadastro)
                 .Where(x => x.Id == pedidoId)
                 .SingleOrDefault();
 
