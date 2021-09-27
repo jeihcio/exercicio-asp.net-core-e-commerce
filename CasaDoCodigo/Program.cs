@@ -14,7 +14,8 @@ namespace CasaDoCodigo
     {
         public static void Main(string[] args)
         {
-            BuildWebHost(args).Run();
+            IWebHost webHost = BuildWebHost(args);
+            webHost.Run();
         }
 
         public static IWebHost BuildWebHost(string[] args) =>

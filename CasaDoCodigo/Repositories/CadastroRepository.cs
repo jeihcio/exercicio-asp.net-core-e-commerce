@@ -1,6 +1,6 @@
 ﻿using CasaDoCodigo.Models;
+using Microsoft.Extensions.Configuration;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -8,18 +8,19 @@ namespace CasaDoCodigo.Repositories
 {
     public interface ICadastroRepository
     {
-        Cadastro Update(int cadastroId, Cadastro novoCadastro);
+        Task<Cadastro> UpdateAsync(int cadastroId, Cadastro novoCadastro);
     }
 
     public class CadastroRepository : BaseRepository<Cadastro>, ICadastroRepository
     {
-        public CadastroRepository(ApplicationContext contexto) : base(contexto)
+        public CadastroRepository(IConfiguration configuration,
+            ApplicationContext contexto) : base(configuration, contexto)
         {
         }
 
-        public Cadastro Update(int cadastroId, Cadastro novoCadastro)
+        public async Task<Cadastro> UpdateAsync(int cadastroId, Cadastro novoCadastro)
         {
-            var cadastroDB = dbSet.Where(x => x.Id == cadastroId)
+            var cadastroDB = dbSet.Where(c => c.Id == cadastroId)
                 .SingleOrDefault();
 
             if (cadastroDB == null)
@@ -28,8 +29,7 @@ namespace CasaDoCodigo.Repositories
             }
 
             cadastroDB.Update(novoCadastro);
-            contexto.SaveChanges();
-
+            await contexto.SaveChangesAsync();
             return cadastroDB;
         }
     }

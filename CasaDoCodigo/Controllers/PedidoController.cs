@@ -1,11 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using CasaDoCodigo.Areas.Identity.Data;
 using CasaDoCodigo.Models;
 using CasaDoCodigo.Models.ViewModels;
 using CasaDoCodigo.Repositories;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace CasaDoCodigo.Controllers
 {
@@ -13,63 +16,101 @@ namespace CasaDoCodigo.Controllers
     {
         private readonly IProdutoRepository produtoRepository;
         private readonly IPedidoRepository pedidoRepository;
-        private readonly IItemPedidoRepository itemPedidoRepository;
+        private readonly UserManager<AppIdentityUser> userManager;
 
-        public PedidoController(IProdutoRepository produtoRepository, IPedidoRepository pedidoRepository,
-            IItemPedidoRepository itemPedidoRepository)
+        public PedidoController(IProdutoRepository produtoRepository,
+            IPedidoRepository pedidoRepository,
+            UserManager<AppIdentityUser> userManager)
         {
             this.produtoRepository = produtoRepository;
             this.pedidoRepository = pedidoRepository;
-            this.itemPedidoRepository = itemPedidoRepository;
+            this.userManager = userManager;
         }
 
-        public IActionResult Carrossel()
+        public async Task<IActionResult> Carrossel()
         {
-            return View(produtoRepository.GetProdutos());
+            return View(await produtoRepository.GetProdutosAsync());
         }
 
-        public IActionResult Carrinho(string codigo)
+        //MELHORIA: 2) Nova view de Busca de Produtos
+        //Para saber mais: Formação .NET
+        //https://cursos.alura.com.br/formacao-dotnet
+        public async Task<IActionResult> BuscaProdutos(string pesquisa)
+        {
+            return View(await produtoRepository.GetProdutosAsync(pesquisa));
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Carrinho(string codigo)
         {
             if (!string.IsNullOrEmpty(codigo))
             {
-                pedidoRepository.AddItem(codigo);
+                await pedidoRepository.AddItemAsync(codigo);
             }
 
-            List<ItemPedido> itens = pedidoRepository.GetPedido().Itens;
+            var pedido = await pedidoRepository.GetPedidoAsync();
+            List<ItemPedido> itens = pedido.Itens;
             CarrinhoViewModel carrinhoViewModel = new CarrinhoViewModel(itens);
-
-            return View(carrinhoViewModel);
+            return base.View(carrinhoViewModel);
         }
 
-        public IActionResult Cadastro()
+        [Authorize]
+        public async Task<IActionResult> Cadastro()
         {
-            var pedido = pedidoRepository.GetPedido();
+            var pedido = await pedidoRepository.GetPedidoAsync();
 
             if (pedido == null)
             {
-                return RedirectToAction("carrossel");
+                return RedirectToAction("Carrossel");
             }
+
+            var usuario = await userManager.GetUserAsync(this.User);
+
+            pedido.Cadastro.Email = usuario.Email;
+            pedido.Cadastro.Telefone = usuario.Telefone;
+            pedido.Cadastro.Nome = usuario.Nome;
+            pedido.Cadastro.Endereco = usuario.Endereco;
+            pedido.Cadastro.Complemento = usuario.Complemento;
+            pedido.Cadastro.Bairro = usuario.Bairro;
+            pedido.Cadastro.Municipio = usuario.Municipio;
+            pedido.Cadastro.UF = usuario.UF;
+            pedido.Cadastro.CEP = usuario.CEP;
 
             return View(pedido.Cadastro);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Resumo(Cadastro cadastro)
+        [Authorize]
+        public async Task<IActionResult> Resumo(Cadastro cadastro)
         {
             if (ModelState.IsValid)
             {
-                return View(pedidoRepository.UpdateCadastro(cadastro));
-            }
+                var usuario = await userManager.GetUserAsync(this.User);
 
+                usuario.Email       = cadastro.Email;
+                usuario.Telefone    = cadastro.Telefone;
+                usuario.Nome        = cadastro.Nome;
+                usuario.Endereco    = cadastro.Endereco;
+                usuario.Complemento = cadastro.Complemento;
+                usuario.Bairro      = cadastro.Bairro;
+                usuario.Municipio   = cadastro.Municipio;
+                usuario.UF          = cadastro.UF;
+                usuario.CEP         = cadastro.CEP;
+
+                await userManager.UpdateAsync(usuario);
+
+                return View(await pedidoRepository.UpdateCadastroAsync(cadastro));
+            }
             return RedirectToAction("Cadastro");
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public UpdateQuantidadeResponse UpdateQuantidade([FromBody]ItemPedido itemPedido)
+        [Authorize]
+        public async Task<UpdateQuantidadeResponse> UpdateQuantidade([FromBody]ItemPedido itemPedido)
         {
-            return pedidoRepository.UpdateQuantidade(itemPedido);
+            return await pedidoRepository.UpdateQuantidadeAsync(itemPedido);
         }
     }
 }
